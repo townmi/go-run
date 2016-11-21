@@ -1,1 +1,7 @@
-package go_run
+package main
+
+import "github.com/astaxie/beego"
+
+func main(){
+	beego.Run()
+}
