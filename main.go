@@ -1,26 +1,17 @@
 package main
 
 import (
-	_ "github.com/astaxie/beego"
 	"log"
 	"net/http"
-	"fmt"
 	"go-run/rest"
+	"go-run/route"
 )
-func sayhelloName(w http.ResponseWriter, r *http.Request) {
-
-	r.ParseForm()
-	fmt.Println(r.Form)
-
-	fmt.Fprintf(w, "Hello World")
-}
-
 func main(){
 	var app = *rest.R
 
-	app.Post("/", sayhelloName);
+	app.Get("/", route.GetHome);
 
-	app.Post("/2", sayhelloName);
+	app.Post("/", route.PostHome);
 
 	err := http.ListenAndServe(":9090", rest.R) //设置监听的端口
 
