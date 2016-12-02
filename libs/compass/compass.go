@@ -1,4 +1,4 @@
-package libs
+package compass
 
 import (
 	"os/exec"

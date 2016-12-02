@@ -11,6 +11,8 @@ func main(){
 
 	app.Get("/", route.GetHome);
 
+	app.Get("/2", route.GetHome);
+
 	app.Post("/", route.PostHome);
 
 	err := http.ListenAndServe(":9090", rest.R) //设置监听的端口
