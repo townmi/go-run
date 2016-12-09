@@ -69,11 +69,3 @@ func (R *Init) Delete(url string, h HandlerFunc) {
 	rInfo := routeInfo{url, "DELETE", h}
 	R.Route[key] = rInfo
 }
-
-func notFound (url string)  {
-
-}
-
-func forBidden (url string)  {
-
-}
