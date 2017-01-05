@@ -3,7 +3,8 @@ package rest
 import (
 	"net/http"
 	"strings"
-	"log"
+	_ "log"
+	"fmt"
 )
 
 type routeInfo struct {
@@ -21,7 +22,12 @@ type Init struct {
 
 var R = &Init{make(map[string]routeInfo)}
 
+
 func (R *Init) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	for key, views := range R.Route {
+		fmt.Println("There are", views, "views for", key)
+	}
 
 	key := strings.ToUpper(r.Method) + strings.ToUpper(r.URL.Path)
 
@@ -31,6 +37,10 @@ func (R *Init) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	http.NotFound(w, r)
 	return
+}
+
+func urlStore(url string) {
+
 }
 
 /**
@@ -47,14 +57,16 @@ func (R *Init) Post(url string, h HandlerFunc) {
 	rInfo := routeInfo{url, "POST", h}
 
 	R.Route[key] = rInfo
-	log.Fatal("Register router:" )
 }
 
 func (R *Init) Get(url string, h HandlerFunc) {
 
+	fmt.Printf("url=%v\n", url)
+
 	key := "GET" + strings.ToUpper(url)
 
 	rInfo := routeInfo{url, "GET", h}
+
 	R.Route[key] = rInfo
 }
 

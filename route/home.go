@@ -9,12 +9,12 @@ type Route interface {
 
 }
 
-func GetHome(w http.ResponseWriter, r *http.Request)  {
-	r.ParseForm()
+func GetHome(w http.ResponseWriter, r *http.Request) {
+
 	fmt.Println(r.Form)
 	fmt.Fprintf(w, "Hello World")
 }
 
-func PostHome(w http.ResponseWriter, r *http.Request)  {
+func PostHome(w http.ResponseWriter, r *http.Request) {
 
 }

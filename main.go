@@ -1,26 +1,78 @@
 package main
 
- import (
- 	"log"
- 	"net/http"
- 	"go-run/rest"
- 	"go-run/route"
- )
+import (
+	"net/http"
+	"fmt"
+	"log"
+	"bytes"
+	_ "os"
+	"github.com/gorilla/mux"
+	"html/template"
+	"io/ioutil"
+	"path"
+)
+
+var (
+	tmpl []byte
+	tmplpath string
+)
 
 
- func main(){
- 	var app = *rest.R
+func main() {
 
- 	err := http.ListenAndServe(":9090", rest.R) //设置监听的端口
+	tmplpath = "/Users/harry/golang/src/go-run/views/index.html"
 
- 	if err != nil {
- 		log.Fatal("ListenAndServe: ", err)
- 	}
+	fmt.Println(path.IsAbs(tmplpath))
 
- 	app.Get("/", route.GetHome);
+	buff, err := ioutil.ReadFile(tmplpath)
 
- 	app.Get("/2", route.GetHome);
+	if err != nil {
+		panic("open file failed!")
+	}
 
- 	app.Post("/", route.PostHome);
+	tmpl = buff
 
- }
+	data := struct {
+		Title string
+		Items []string
+	}{
+		Title: "My page",
+		Items: []string{
+			"My photos",
+			"My blog",
+		},
+	}
+
+	t, err := template.New("index").Parse(string(buff));
+
+	var b bytes.Buffer
+
+	err = t.Execute(&b, data)
+
+	tmpl = b.Bytes()
+
+	if err != nil {
+		panic("open file failed!")
+	}
+
+	r := mux.NewRouter()
+
+	r.Host("www.example.com")
+
+	// Routes consist of a path and a handler function.
+	r.HandleFunc("/", index).Methods("GET")
+
+	r.HandleFunc("/{cat}", YourHandler2)
+
+	// Bind to a port and pass our router in
+	log.Fatal(http.ListenAndServe(":8000", r))
+}
+
+func YourHandler2(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Gorilla!\n"))
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	w.Write(tmpl)
+}
+
