@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"database/sql"
 	"log"
-	"fmt"
-	_ "go-run/config"
 	_ "go-run/model"
 	_ "github.com/go-sql-driver/mysql"
 	"go-run/config"
@@ -16,16 +14,16 @@ type searchParams struct {
 
 func GetSearch(w http.ResponseWriter, r *http.Request) {
 
-	dbLink := config.Env.SQL.USER + ":" + config.Env.SQL.PASSWORD + "@tcp(" + config.Env.SQL.HOST + ":" + config.Env.SQL.PORT + ")/stock?tls=skip-verify&autocommit=true"
+	dbLink := config.Env.SQL.USER + ":" + config.Env.SQL.PASSWORD + "@tcp(" + config.Env.SQL.HOST + ":" + config.Env.SQL.PORT + ")/" + config.Env.SQL.DATABASE + "?tls=skip-verify&autocommit=true"
 
 	db, err := sql.Open(config.Env.SQL.NAME, dbLink)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	stockid := 600007
+	id := "21"
 
-	rows, err := db.Query("SELECT STOCKNAME, STOCKCHINANAME FROM stockCollections WHERE STOCKID=?", stockid)
+	rows, err := db.Query("SELECT title, body FROM art WHERE id=?", id)
 
 	if err != nil {
 		log.Fatal(err)
@@ -34,15 +32,14 @@ func GetSearch(w http.ResponseWriter, r *http.Request) {
 	db.Close()
 
 	defer rows.Close()
-
+	var title string
+	var body string
 	for rows.Next() {
-		var stockname string
-		var stockchinaname string
-		if err := rows.Scan(&stockname, &stockchinaname); err != nil {
+
+		if err := rows.Scan(&title, &body); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%s & %v is %d\n", stockname, stockchinaname, stockid)
 	}
 
-	w.Write([]byte("{a:12}"))
+	w.Write([]byte("{title:" + title + ", body: " + body + ", id:" + id + "}"))
 }

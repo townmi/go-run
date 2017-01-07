@@ -15,6 +15,7 @@ type SQL struct {
 	PASSWORD string
 	HOST     string
 	PORT     string
+	DATABASE string
 }
 
 type ENV struct {
