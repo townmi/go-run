@@ -17,17 +17,12 @@ func GetSearch(w http.ResponseWriter, r *http.Request) {
 	dbLink := config.Env.SQL.USER + ":" + config.Env.SQL.PASSWORD + "@tcp(" + config.Env.SQL.HOST + ":" + config.Env.SQL.PORT + ")/" + config.Env.SQL.DATABASE + "?tls=skip-verify&autocommit=true"
 
 	db, err := sql.Open(config.Env.SQL.NAME, dbLink)
+	config.CheckError(err)
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	id := "21"
 
 	rows, err := db.Query("SELECT title, body FROM art WHERE id=?", id)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	config.CheckError(err)
 
 	db.Close()
 

@@ -2,7 +2,6 @@ package route
 
 import (
 	"net/http"
-	"fmt"
 	"html/template"
 	"bytes"
 	"io/ioutil"
@@ -10,28 +9,20 @@ import (
 )
 
 var (
-	tmpl []byte
+	html []byte
 )
 
-type Route interface {
+type MapRoute interface {
 }
 
 func GetHome(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Printf("path: %v", "in")
+	// get index view template
+	viewPath := config.Env.PATH + "views/index.html"
+	buff, err := ioutil.ReadFile(viewPath)
+	config.CheckError(err)
 
-	tmplpath := config.Env.PATH + "views/index.html"
-
-	fmt.Printf("path: %v\n", tmplpath)
-
-	buff, err := ioutil.ReadFile(tmplpath)
-
-	if err != nil {
-		panic("open file failed!")
-	}
-
-	tmpl = buff
-
+	// set data model, send to view
 	data := struct {
 		Title string
 		Items []string
@@ -43,20 +34,16 @@ func GetHome(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	// new template with index template
 	t, err := template.New("index").Parse(string(buff))
+	config.CheckError(err)
+
+	// write data to view
 	var b bytes.Buffer
-
 	err = t.Execute(&b, data)
+	config.CheckError(err)
 
-	tmpl = b.Bytes()
-
-	if err != nil {
-		panic("open file failed!")
-	}
-
-	w.Write(tmpl)
-}
-
-func PostHome(w http.ResponseWriter, r *http.Request) {
-
+	// send document type of bytes to client
+	html = b.Bytes()
+	w.Write(html)
 }

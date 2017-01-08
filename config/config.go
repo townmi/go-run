@@ -26,6 +26,12 @@ type ENV struct {
 
 var Env ENV
 
+func CheckError(err error) {
+	if err != nil {
+		panic("open file failed!")
+	}
+}
+
 func init() {
 
 	file, _ := exec.LookPath(os.Args[0])
