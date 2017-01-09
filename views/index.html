@@ -1,23 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
 <head>
     <meta charset="utf-8">
+    <link href="//www.google.com/images/branding/product/ico/googleg_lodp.ico" rel="shortcut icon">
+    <link rel="apple-touch-icon-precomposed" href="//st.360buyimg.com/m/images/apple-touch-icon.png?v=jd201612271841">
+
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="author" content="m.www.com">
+
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Pragma" content="no-cache">
+
     <title>{{.Title}}</title>
-    <meta name="keywords" content=""/>
-    <meta id="description" name="description" content=""/>
-    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
+    <meta name="keywords" content="{{.Keywords}}"/>
+    <meta id="description" name="description" content="{{.Description}}"/>
+
+    <!--
+        <meta content="//www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" itemprop="image">
+    -->
+
+    <meta name="viewport" id="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="apple-touch-fullscreen" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
     <meta name="format-detection" content="telephone=no"/>
 </head>
-    <body>
-        {{range .Items}}<div>{{ . }}</div>{{else}}<div><strong>no rows</strong></div>{{end}}
-        <form action="">
-            <label for="q">search</label>
-            <input type="text" id="q" name="q" >
-            <input type="hidden" name="charset" value="utf-8">
-        </form>
-    </body>
+<body>
+{{range .Items}}
+<div>{{ . }}</div>
+{{else}}
+<div><strong>no rows</strong></div>
+{{end}}
+<form action="/search">
+    <label for="q">search</label>
+    <input type="text" id="q" name="q">
+    <input type="hidden" name="charset" value="utf-8">
+</form>
+</body>
 </html>

@@ -27,8 +27,10 @@ func GetSearch(w http.ResponseWriter, r *http.Request) {
 	db.Close()
 
 	defer rows.Close()
+
 	var title string
 	var body string
+
 	for rows.Next() {
 
 		if err := rows.Scan(&title, &body); err != nil {

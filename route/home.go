@@ -24,10 +24,14 @@ func GetHome(w http.ResponseWriter, r *http.Request) {
 
 	// set data model, send to view
 	data := struct {
-		Title string
-		Items []string
+		Title       string
+		Keywords    string
+		Description string
+		Items       []string
 	}{
-		Title: "My page",
+		Title:       "My page",
+		Keywords:    "search",
+		Description: "search",
 		Items: []string{
 			"My photos",
 			"My blog",

@@ -38,24 +38,17 @@ func init() {
 
 	path, _ := filepath.Abs(file + "/../")
 
-	envFile, err := os.Open(path + "/env.json")
+	fmt.Printf("path: %v", path+"/env.json")
 
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		return
-	}
+	envFile, err := os.Open(path + "/env.json")
+	CheckError(err)
+
 	defer envFile.Close()
 
 	envString, err := ioutil.ReadAll(envFile)
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		return
-	}
+	CheckError(err)
 
 	errJson := json.Unmarshal([]byte(envString), &Env)
-
-	if errJson != nil {
-		fmt.Printf("err was %v", errJson)
-	}
+	CheckError(errJson)
 
 }
