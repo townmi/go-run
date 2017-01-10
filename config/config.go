@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -16,6 +15,7 @@ type SQL struct {
 	HOST     string
 	PORT     string
 	DATABASE string
+	LOCAL    string
 }
 
 type ENV struct {
@@ -37,8 +37,6 @@ func init() {
 	file, _ := exec.LookPath(os.Args[0])
 
 	path, _ := filepath.Abs(file + "/../")
-
-	fmt.Printf("path: %v", path+"/env.json")
 
 	envFile, err := os.Open(path + "/env.json")
 	CheckError(err)
