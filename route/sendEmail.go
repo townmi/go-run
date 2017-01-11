@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func SendToMail(user, password, host, to, subject, body, mailtype string, chanErr chan bool) {
+func SendToMail(user, password, host, to, subject, body, mailtype string, chanFail, chanSuccess chan int) bool {
 	hp := strings.Split(host, ":")
 	auth := smtp.PlainAuth("", user, password, hp[0])
 	var content_type string
@@ -22,16 +22,19 @@ func SendToMail(user, password, host, to, subject, body, mailtype string, chanEr
 	err := smtp.SendMail(host, auth, user, send_to, msg)
 	if err != nil {
 		fmt.Println(err)
-		chanErr <- true
+		chanFail <- 1
+		return false
 	}
+	chanSuccess <- 2
+	return true
 }
 
 func SendEmail(w http.ResponseWriter, r *http.Request) {
 
 	user := "1047887945@qq.com"
 	password := "abcd1234"
-	host := "smtp.exmail.qq.com:465"
-	to := "harrytang@vipabc.com"
+	host := "smtp.exmail.qq.com:25"
+	to := "towne766@126.com"
 
 	subject := "使用Golang发送邮件"
 
@@ -45,13 +48,18 @@ func SendEmail(w http.ResponseWriter, r *http.Request) {
 		</html>
 		`
 	fmt.Println("send email")
-	chanErr := make(chan bool)
-	go SendToMail(user, password, host, to, subject, body, "html", chanErr)
+	chanFail := make(chan int)
+	chanSuccess := make(chan int)
+	go SendToMail(user, password, host, to, subject, body, "html", chanFail, chanSuccess)
 
 	for {
 		select {
-		case <-chanErr:
-			fmt.Printf("c1:%d ", chanErr)
+		case <-chanFail:
+			fmt.Printf("c1:%d ", chanFail)
+			w.Write([]byte("error"))
+			return
+		case <-chanSuccess:
+			fmt.Printf("c1:%d ", chanSuccess)
 			w.Write([]byte("success"))
 			return
 		}
