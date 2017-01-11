@@ -19,8 +19,11 @@ func main() {
 	r.HandleFunc("/", route.GetHome).Methods("GET")
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
 
+
+	r.HandleFunc("/email", route.SendEmail).Methods("GET")
+
 	// POST ROUTES MAP
-	r.HandleFunc("/search", route.GetSearch).Methods("POST")
+	r.HandleFunc("/search", route.PostSearch).Methods("POST")
 
 	// BIND PORT TO SERVER
 	log.Fatal(http.ListenAndServe(":"+config.Env.PORT, r))
