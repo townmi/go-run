@@ -10,18 +10,18 @@ import (
 )
 
 type SQL struct {
-	NAME     string
-	USER     string
-	PASSWORD string
-	HOST     string
-	PORT     string
-	DATABASE string
-	LOCAL    string
+	NAME     string `json:"name"`
+	USER     string `json:"user"`
+	PASSWORD string `json:"password"`
+	HOST     string `json:"host"`
+	PORT     string `json:"port"`
+	DATABASE string `json:"database"`
+	LOCAL    string `json:"local"`
 }
 
 type ENV struct {
-	PATH string
-	PORT string
+	PATH string `json:"path"`
+	PORT string `json:"port"`
 	SQL  SQL `json:"SQL"`
 }
 
