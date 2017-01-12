@@ -20,7 +20,7 @@ func GetHome(w http.ResponseWriter, r *http.Request) {
 	// get index view template
 	viewPath := config.Env.PATH + "views/index.html"
 	buff, err := ioutil.ReadFile(viewPath)
-	config.CheckError(err)
+	config.CheckError(err, "read View index fail")
 
 	// set data model, send to view
 	data := struct {
@@ -40,12 +40,12 @@ func GetHome(w http.ResponseWriter, r *http.Request) {
 
 	// new template with index template
 	t, err := template.New("index").Parse(string(buff))
-	config.CheckError(err)
+	config.CheckError(err, "new template index fail")
 
 	// write data to view
 	var b bytes.Buffer
 	err = t.Execute(&b, data)
-	config.CheckError(err)
+	config.CheckError(err, "index execute data fail")
 
 	// send document type of bytes to client
 	html = b.Bytes()

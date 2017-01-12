@@ -19,7 +19,6 @@ func main() {
 	r.HandleFunc("/", route.GetHome).Methods("GET")
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
 
-
 	r.HandleFunc("/email", route.SendEmail).Methods("GET")
 
 	// POST ROUTES MAP

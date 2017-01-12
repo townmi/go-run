@@ -54,7 +54,6 @@
         xhr.setRequestHeader("Content-Type", "application/json");
 
 
-
         xhr.onload = function () {
             if (this.status == 200 || this.status == 304) {
                 // console.log(this.responseText);
@@ -69,7 +68,7 @@
         xhr.upload.onprogress = function () {
         };
 
-        xhr.send(JSON.stringify({value:v}));
+        xhr.send(JSON.stringify({value: v}));
     }
 </script>
 </html>

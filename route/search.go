@@ -2,82 +2,40 @@ package route
 
 import (
 	"net/http"
-	"database/sql"
-	_ "go-run/model"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/go-sql-driver/mysql"
-	"go-run/config"
-	_ "fmt"
+	_ "strconv"
 	"time"
+	_ "fmt"
+	"go-run/config"
+	DB "go-run/services"
 	"encoding/json"
 	_ "io/ioutil"
 )
-
-type stock struct {
-	ID             int64
-	STOCKID        string
-	STOCKNAME      string
-	STOCKCHINANAME string
-	CREATEDAT      time.Time
-	UPDATEAT       time.Time
-}
 
 type search struct {
 	VALUE string
 }
 
-var dbLink string
-
-func init() {
-
-	// set db link
-	switch config.Env.SQL.NAME {
-	case "sqlite3":
-		dbLink = config.Env.SQL.LOCAL
-	case "mysql":
-		dbLink = config.Env.SQL.USER + ":" + config.Env.SQL.PASSWORD + "@tcp(" + config.Env.SQL.HOST + ":" + config.Env.SQL.PORT + ")/" + config.Env.SQL.DATABASE + "?tls=skip-verify&autocommit=true"
-	default:
-		dbLink = config.Env.SQL.LOCAL
-	}
+type searchId struct {
+	StockId string
 }
 
 func GetSearch(w http.ResponseWriter, r *http.Request) {
 
-	db, err := sql.Open(config.Env.SQL.NAME, dbLink)
-	config.CheckError(err)
+	model := struct {
+		ID             int
+		StockName      string
+		StockId        string
+		STOCKCHINANAME string
+		CREATEDAT      time.Time
+		UPDATEAT       time.Time
+	}{}
 
-	rows, err := db.Query("SELECT * FROM stockCollections")
-	config.CheckError(err)
+	sqlString := "SELECT ID, StockName, StockId, STOCKCHINANAME, CREATEDAT, UPDATEAT FROM stockCollections"
 
-	db.Close()
+	data := DB.Select(sqlString, &model)
 
-	defer rows.Close()
-
-	var data [] stock
-
-	for rows.Next() {
-		var id int64
-		var stockId string
-		var stockName string
-		var stockChinaName string
-		var created time.Time
-		var updated time.Time
-
-		err := rows.Scan(&id, &stockId, &stockName, &stockChinaName, &created, &updated)
-		config.CheckError(err)
-
-		val := stock{
-			ID:             id,
-			STOCKID:        stockId,
-			STOCKNAME:      stockName,
-			STOCKCHINANAME: stockChinaName,
-			CREATEDAT:      created,
-			UPDATEAT:       updated,
-		}
-
-		data = append(data, val)
-	}
 	send, _ := json.Marshal(data)
+
 	w.Write([]byte(string(send)))
 
 }
@@ -88,45 +46,26 @@ func PostSearch(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&t)
-	config.CheckError(err)
+	config.CheckError(err, "Json decode r body fail")
+
+	//queryId, err := strconv.ParseInt(t.VALUE, 10, 32)
+	//config.CheckError(err, "convert string to int fail")
+	//result := int32(queryId)
 
 	defer r.Body.Close()
 
-	db, err := sql.Open(config.Env.SQL.NAME, dbLink)
-	config.CheckError(err)
+	model := struct {
+		StockId        string
+		StockName      string
+		StockChinaName string
+	}{}
 
-	rows, err := db.Query("SELECT * FROM stockCollections")
-	config.CheckError(err)
+	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockCollections WHERE STOCKID LIKE '%" + t.VALUE + "%' OR STOCKNAME LIKE '%" + t.VALUE + "%' OR STOCKCHINANAME LIKE '%" + t.VALUE + "%'"
 
-	db.Close()
+	data := DB.Select(sqlString, &model)
 
-	defer rows.Close()
-
-	var data [] stock
-
-	for rows.Next() {
-		var id int64
-		var stockId string
-		var stockName string
-		var stockChinaName string
-		var created time.Time
-		var updated time.Time
-
-		err := rows.Scan(&id, &stockId, &stockName, &stockChinaName, &created, &updated)
-		config.CheckError(err)
-
-		val := stock{
-			ID:             id,
-			STOCKID:        stockId,
-			STOCKNAME:      stockName,
-			STOCKCHINANAME: stockChinaName,
-			CREATEDAT:      created,
-			UPDATEAT:       updated,
-		}
-
-		data = append(data, val)
-	}
 	send, _ := json.Marshal(data)
+
 	w.Write([]byte(string(send)))
 
 }

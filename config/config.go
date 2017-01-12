@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"fmt"
 	"path/filepath"
 )
 
@@ -26,9 +27,11 @@ type ENV struct {
 
 var Env ENV
 
-func CheckError(err error) {
+func CheckError(err error, errString string) {
 	if err != nil {
-		panic("open file failed!")
+		fmt.Printf(errString)
+		// panic(err)
+
 	}
 }
 
@@ -39,14 +42,14 @@ func init() {
 	path, _ := filepath.Abs(file + "/../")
 
 	envFile, err := os.Open(path + "/env.json")
-	CheckError(err)
+	CheckError(err, "open env.json fail")
 
 	defer envFile.Close()
 
 	envString, err := ioutil.ReadAll(envFile)
-	CheckError(err)
+	CheckError(err, "read envFile fail")
 
 	errJson := json.Unmarshal([]byte(envString), &Env)
-	CheckError(errJson)
+	CheckError(errJson, "Json Unmarshal fail")
 
 }

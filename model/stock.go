@@ -1,7 +1,14 @@
 package model
 
+import (
+	"time"
+)
+
 type Stock struct {
-	ID        string
-	StockName string
-	StockId   int8
+	ID             int
+	StockName      string
+	StockId        string
+	STOCKCHINANAME string
+	CREATEDAT      time.Time
+	UPDATEAT       time.Time
 }

@@ -32,7 +32,7 @@ func SendToMail(user, password, host, to, subject, body, mailtype string, chanFa
 func SendEmail(w http.ResponseWriter, r *http.Request) {
 
 	user := "1047887945@qq.com"
-	password := "abcd1234"
+	password := "bhjohzkrxtmobchg"
 	host := "smtp.exmail.qq.com:25"
 	to := "towne766@126.com"
 
