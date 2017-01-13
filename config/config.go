@@ -31,7 +31,6 @@ func CheckError(err error, errString string) {
 	if err != nil {
 		fmt.Printf(errString)
 		// panic(err)
-
 	}
 }
 
