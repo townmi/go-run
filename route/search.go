@@ -12,7 +12,7 @@ import (
 )
 
 type search struct {
-	VALUE string
+	VALUE string `json:"value"`
 }
 
 type searchId struct {
@@ -20,6 +20,8 @@ type searchId struct {
 }
 
 func GetSearch(w http.ResponseWriter, r *http.Request) {
+
+	config.SetCORS(w)
 
 	model := struct {
 		ID             int
@@ -41,16 +43,19 @@ func GetSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostSearch(w http.ResponseWriter, r *http.Request) {
+
+	config.SetCORS(w)
+
 	// t args from client
 	var t search
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&t)
-	config.CheckError(err, "Json decode r body fail")
+	r.ParseForm()
 
-	//queryId, err := strconv.ParseInt(t.VALUE, 10, 32)
-	//config.CheckError(err, "convert string to int fail")
-	//result := int32(queryId)
+	//decoder := json.NewDecoder(r.Body)
+	//err := decoder.Decode(&t)
+	//config.CheckError(err, "Json decode r body fail")
+
+	t.VALUE = r.Form.Get("value")
 
 	defer r.Body.Close()
 
@@ -60,7 +65,7 @@ func PostSearch(w http.ResponseWriter, r *http.Request) {
 		StockChinaName string
 	}{}
 
-	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockCollections WHERE STOCKID LIKE '%" + t.VALUE + "%' OR STOCKNAME LIKE '%" + t.VALUE + "%' OR STOCKCHINANAME LIKE '%" + t.VALUE + "%'"
+	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockCollections WHERE STOCKID LIKE '%" + t.VALUE + "%'"
 
 	data := DB.Select(sqlString, &model)
 

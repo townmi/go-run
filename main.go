@@ -6,10 +6,10 @@ import (
 	"log"
 	"go-run/route"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 )
 
 func main() {
-
 	// new mux Router
 	r := mux.NewRouter()
 	//
@@ -18,13 +18,12 @@ func main() {
 	// GET ROUTES MAP
 	r.HandleFunc("/", route.GetHome).Methods("GET")
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
-
 	r.HandleFunc("/email", route.SendEmail).Methods("GET")
 
 	// POST ROUTES MAP
 	r.HandleFunc("/search", route.PostSearch).Methods("POST")
 
 	// BIND PORT TO SERVER
-	log.Fatal(http.ListenAndServe(":"+config.Env.PORT, r))
+	log.Fatal(http.ListenAndServe(":"+config.Env.PORT, handlers.CompressHandler(r)))
 
 }

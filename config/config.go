@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"fmt"
 	"path/filepath"
+	"net/http"
 )
 
 type SQL struct {
@@ -34,6 +35,11 @@ func CheckError(err error, errString string) {
 	}
 }
 
+func SetCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type\n")
+}
 func init() {
 
 	file, _ := exec.LookPath(os.Args[0])
