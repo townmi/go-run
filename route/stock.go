@@ -7,14 +7,14 @@ import (
 	"io/ioutil"
 	DB "go-run/services"
 	"github.com/robertkrimen/otto"
-	"reflect"
+	_ "bytes"
 	"fmt"
 )
 
 type stockList struct {
-	STOCKID        string
-	STOCKNAME      string
-	STOCKCHINANAME string
+	VAL  string
+	VAL3 string
+	VAL2 string
 }
 
 var stockLists []stockList
@@ -31,25 +31,26 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 	config.CheckError(err, "ioutil read data fail")
 
 	vm := otto.New()
+	vm.Run(string(body) + "\n;var stockList = JSON.stringify(get_alldata());")
 
-	result, _ := vm.Run(string(body) + "\n;console.log(JSON.stringify(get_alldata()));")
-	fmt.Println(result)
+	value, err := vm.Get("stockList")
+	config.CheckError(err, "vm get javascript data fail")
 
-	s := reflect.ValueOf(&otto.Value{}).Elem()
-	len := s.NumField()
-
-	fmt.Println( s.FieldByName("value"), len)
-
-	//errJson := json.Unmarshal([]byte("{}"), &stockLists)
-	//config.CheckError(errJson, "Json Unmarshal fail")
+	v, _ := value.ToString()
+	errJson := json.Unmarshal([]byte(v), &stockLists)
+	config.CheckError(errJson, "Json Unmarshal fail")
 
 	model := struct {
-		ID int
+		StockId string
 	}{}
 
-	sqlString := "SELECT count(*) AS `count` FROM `stockLists` AS `stockList` WHERE `stockList`.`STOCKID` = '600012' AND `stockList`.`STOCKNAME` = 'msyx'"
+	sqlString := "SELECT StockId FROM stockLists"
 
 	data := DB.Select(sqlString, &model)
+
+	for _, v := range data {
+		fmt.Println(v)
+	}
 
 	send, _ := json.Marshal(data)
 
