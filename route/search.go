@@ -3,7 +3,6 @@ package route
 import (
 	"net/http"
 	_ "strconv"
-	"time"
 	_ "fmt"
 	"go-run/config"
 	DB "go-run/services"
@@ -28,11 +27,9 @@ func GetSearch(w http.ResponseWriter, r *http.Request) {
 		StockName      string
 		StockId        string
 		STOCKCHINANAME string
-		CREATEDAT      time.Time
-		UPDATEAT       time.Time
 	}{}
 
-	sqlString := "SELECT ID, StockName, StockId, STOCKCHINANAME, CREATEDAT, UPDATEAT FROM stockCollections"
+	sqlString := "SELECT ID, StockName, StockId, STOCKCHINANAME FROM stockLists"
 
 	data := DB.Select(sqlString, &model)
 
@@ -65,7 +62,7 @@ func PostSearch(w http.ResponseWriter, r *http.Request) {
 		StockChinaName string
 	}{}
 
-	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockCollections WHERE STOCKID LIKE '%" + t.VALUE + "%'"
+	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockLists WHERE STOCKID LIKE '%" + t.VALUE + "%'"
 
 	data := DB.Select(sqlString, &model)
 

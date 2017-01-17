@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http"
-	"go-run/config"
+	config "go-run/config"
 	"log"
 	"go-run/route"
 	"github.com/gorilla/mux"
@@ -19,6 +19,7 @@ func main() {
 	r.HandleFunc("/", route.GetHome).Methods("GET")
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
 	r.HandleFunc("/email", route.SendEmail).Methods("GET")
+	r.HandleFunc("/stock", route.GetStock).Methods("GET")
 
 	// POST ROUTES MAP
 	r.HandleFunc("/search", route.PostSearch).Methods("POST")
