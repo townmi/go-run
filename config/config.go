@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"net/http"
+	"bytes"
+	"strconv"
 )
 
 type SQL struct {
@@ -40,6 +42,22 @@ func SetCORS(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type\n")
 }
+
+func ByteToHex(data []byte) string {
+
+	buffer := new(bytes.Buffer)
+	for _, b := range data {
+
+		s := strconv.FormatInt(int64(b & 0xff), 16)
+		if len(s) == 1 {
+			buffer.WriteString("0")
+		}
+		buffer.WriteString(s)
+	}
+
+	return buffer.String()
+}
+
 func init() {
 
 	file, _ := exec.LookPath(os.Args[0])

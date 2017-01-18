@@ -7,12 +7,9 @@ import (
 	"io/ioutil"
 	DB "go-run/services"
 	"github.com/robertkrimen/otto"
-	"bytes"
-	"crypto/sha1"
-	"io"
-	"strconv"
+	_ "crypto/sha1"
+	_ "io"
 	"fmt"
-	"time"
 	_ "reflect"
 )
 
@@ -29,65 +26,50 @@ type stockDBModel struct {
 
 var stockLists []stockList
 
-func ByteToHex(data []byte) string {
-
-	buffer := new(bytes.Buffer)
-	for _, b := range data {
-
-		s := strconv.FormatInt(int64(b & 0xff), 16)
-		if len(s) == 1 {
-			buffer.WriteString("0")
-		}
-		buffer.WriteString(s)
-	}
-
-	return buffer.String()
-}
-
 func init() {
 
-	var list [2]stockList
-	var list2 [2]stockList
-
-	hash := make(map[string]int)
-
-	list[0] = stockList{VAL:"600000", VAL3:"pfyx", VAL2:"浦发银行"}
-	list[1] = stockList{VAL:"600018", VAL3:"sgjt", VAL2:"上港集团"}
-
-	list2[0] = stockList{VAL:"600019", VAL3:"bggf", VAL2:"宝钢股份"}
-	list2[1] = stockList{VAL:"600000", VAL3:"pfyx", VAL2:"浦发银行"}
-
-	for _, v := range list {
-
-		h := sha1.New()
-
-		s := v.VAL + v.VAL2
-
-		io.WriteString(h, s)
-
-		bs := h.Sum(nil)
-		str := ByteToHex(bs)
-
-		hash[str] = 1
-
-	}
-
-	for _, v := range list2 {
-
-		h := sha1.New()
-
-		s := v.VAL + v.VAL2
-
-		io.WriteString(h, s)
-
-		bs := h.Sum(nil)
-		str := ByteToHex(bs)
-
-		fmt.Println(hash[str])
-
-	}
-
-	fmt.Println(hash)
+	//var list [2]stockList
+	//var list2 [2]stockList
+	//
+	//hash := make(map[string]int)
+	//
+	//list[0] = stockList{VAL:"600000", VAL3:"pfyx", VAL2:"浦发银行"}
+	//list[1] = stockList{VAL:"600018", VAL3:"sgjt", VAL2:"上港集团"}
+	//
+	//list2[0] = stockList{VAL:"600019", VAL3:"bggf", VAL2:"宝钢股份"}
+	//list2[1] = stockList{VAL:"600000", VAL3:"pfyx", VAL2:"浦发银行"}
+	//
+	//for _, v := range list {
+	//
+	//	h := sha1.New()
+	//
+	//	s := v.VAL + v.VAL2
+	//
+	//	io.WriteString(h, s)
+	//
+	//	bs := h.Sum(nil)
+	//	str := ByteToHex(bs)
+	//
+	//	hash[str] = 1
+	//
+	//}
+	//
+	//for _, v := range list2 {
+	//
+	//	h := sha1.New()
+	//
+	//	s := v.VAL + v.VAL2
+	//
+	//	io.WriteString(h, s)
+	//
+	//	bs := h.Sum(nil)
+	//	str := ByteToHex(bs)
+	//
+	//	fmt.Println(hash[str])
+	//
+	//}
+	//
+	//fmt.Println(hash)
 }
 
 func GetStock(w http.ResponseWriter, r *http.Request) {
@@ -114,47 +96,28 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 	sqlString := "SELECT STOCKID, STOCKCHINANAME FROM stockLists"
 	data := DB.Select(sqlString, &stockDBModel{})
 
-	t := time.Now()
-	fmt.Println(t.UnixNano())
 	hashMap := make(map[string]int)
 	hashResult := make([]stockList, 0)
+
 	for _, v := range data {
-		h := sha1.New()
+
 		sv := v.(stockDBModel)
 		s := sv.StockId + sv.StockChinaName
 
-		io.WriteString(h, s)
-
-		bs := h.Sum(nil)
-		str := ByteToHex(bs)
-
-		hashMap[str] = 1
+		hashMap[s] = 1
 	}
 
 	for _, v := range stockLists {
-		h := sha1.New()
+
 		s := v.VAL + v.VAL2
-
-		io.WriteString(h, s)
-
-		bs := h.Sum(nil)
-		str := ByteToHex(bs)
-
-		sv := hashMap[str]
+		sv := hashMap[s]
 
 		if sv == 0 {
 			hashResult = append(hashResult, v)
 		}
 	}
 
-	//res := make([]int, 0)
-	//for j := 0; j <= 10000; j++ {
-	//	res = append(res, j)
-	//}
-
 	fmt.Println(hashResult)
-	xt := time.Now()
-	fmt.Println(xt.UnixNano())
 
 	send, _ := json.Marshal(data)
 
