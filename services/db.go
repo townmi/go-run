@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"reflect"
 	"go-run/config"
+	"fmt"
 	_ "go-run/model"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"
@@ -46,6 +47,8 @@ func Select(query string, model interface{}, cond ...interface{}) []interface{} 
 	for i := 0; i < len; i++ {
 		rowCells[i] = s.Field(i).Addr().Interface()
 	}
+
+	fmt.Println(rowCells[0])
 
 	for rows.Next() {
 		err = rows.Scan(rowCells...)
