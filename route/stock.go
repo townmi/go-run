@@ -21,6 +21,7 @@ type stockList struct {
 
 type stockDBModel struct {
 	StockId        string
+	StockName      string
 	StockChinaName string
 }
 
@@ -93,7 +94,7 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 	errJson := json.Unmarshal([]byte(v), &stockLists)
 	config.CheckError(errJson, "Json Unmarshal fail")
 
-	sqlString := "SELECT STOCKID, STOCKCHINANAME FROM stockLists"
+	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockLists"
 	data := DB.Select(sqlString, &stockDBModel{})
 
 	hashMap := make(map[string]int)
@@ -118,8 +119,17 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println(hashResult)
+	insertSlice := make([]stockDBModel, 0)
+	for _, v := range hashResult {
+		insertSlice = append(insertSlice, stockDBModel{v.VAL, v.VAL3, v.VAL2})
+	}
 
-	send, _ := json.Marshal(data)
+	inserString := "INSERT INTO stockLists(STOCKID, STOCKNAME, STOCKCHINANAME) values(?,?,?)"
+
+	insertData := DB.Insert(inserString, &insertSlice)
+
+
+	send, _ := json.Marshal(insertData)
 
 	w.Write([]byte(string(send)))
 

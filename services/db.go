@@ -33,10 +33,10 @@ func Select(query string, model interface{}, cond ...interface{}) []interface{} 
 
 	stmt, err := db.Prepare(query)
 	config.CheckError(err, "prepare sql for ---- ****** ----> " + query + " <---- ****** ----fail")
-	defer stmt.Close()
 
 	rows, err := stmt.Query(cond...)
 	config.CheckError(err, "Query db fail")
+
 	defer rows.Close()
 
 	result := make([]interface{}, 0)
@@ -60,23 +60,25 @@ func Select(query string, model interface{}, cond ...interface{}) []interface{} 
 	return result
 }
 
-//func Insert(query string, cond ...interface{}) interface{} {
-//
-//	db, err := sql.Open(config.Env.SQL.NAME, dbLink)
-//	config.CheckError(err, "open db fail")
-//	defer db.Close()
-//
-//	stmt, err := db.Prepare(query)
-//	config.CheckError(err, "prepare sql for ---- ****** ----> " + query + " <---- ****** ----fail")
-//
-//	res, err := stmt.Exec(cond...)
-//	config.CheckError(err, "insert values fail")
-//
-//	//lastId, err := res.LastInsertId()
-//	//config.CheckError(err, "get last Id fail")
-//
-//	rowCnt, err := res.RowsAffected()
-//	config.CheckError(err, "get rows fail")
-//
-//	return  &rowCnt
-//}
+func Insert(query string, cond interface{}) interface{} {
+
+	db, err := sql.Open(config.Env.SQL.NAME, dbLink)
+	config.CheckError(err, "open db fail")
+	defer db.Close()
+
+	stmt, err := db.Prepare(query)
+	config.CheckError(err, "prepare sql for ---- ****** ----> " + query + " <---- ****** ----fail")
+
+	res, err := stmt.Exec(cond)
+	config.CheckError(err, "insert values fail")
+
+	defer stmt.Close()
+
+	lastId, err := res.LastInsertId()
+	config.CheckError(err, "get last Id fail")
+
+	//rowCnt, err := res.RowsAffected()
+	//config.CheckError(err, "get rows fail")
+
+	return  lastId
+}
