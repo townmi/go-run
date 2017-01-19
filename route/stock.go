@@ -9,8 +9,8 @@ import (
 	"github.com/robertkrimen/otto"
 	_ "crypto/sha1"
 	_ "io"
-	"fmt"
 	_ "reflect"
+	"bytes"
 )
 
 type stockList struct {
@@ -118,19 +118,26 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println(hashResult)
-	insertSlice := make([]stockDBModel, 0)
-	for _, v := range hashResult {
-		insertSlice = append(insertSlice, stockDBModel{v.VAL, v.VAL3, v.VAL2})
+	if len(hashResult) == 0 {
+		w.Write([]byte(`{action: "nodiff"}`))
+	} else {
+		b := bytes.Buffer{}
+		b.WriteString("INSERT INTO stockLists(STOCKID, STOCKNAME, STOCKCHINANAME) values")
+
+		insertSlice := make([]interface{}, 0)
+		for i, v := range hashResult {
+			insertSlice = append(insertSlice, v.VAL, v.VAL3, v.VAL2)
+			if i == len(hashResult) - 1 {
+				b.WriteString("(?,?,?)")
+			} else {
+				b.WriteString("(?,?,?), ")
+			}
+		}
+
+		rowCnt := DB.Insert(b.String(), insertSlice...)
+
+		send, _ := json.Marshal(rowCnt)
+
+		w.Write([]byte(string(send)))
 	}
-
-	inserString := "INSERT INTO stockLists(STOCKID, STOCKNAME, STOCKCHINANAME) values(?,?,?)"
-
-	insertData := DB.Insert(inserString, &insertSlice)
-
-
-	send, _ := json.Marshal(insertData)
-
-	w.Write([]byte(string(send)))
-
 }

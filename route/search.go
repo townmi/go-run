@@ -26,10 +26,10 @@ func GetSearch(w http.ResponseWriter, r *http.Request) {
 		ID             int
 		StockName      string
 		StockId        string
-		STOCKCHINANAME string
+		StockChinaName string
 	}{}
 
-	sqlString := "SELECT ID, StockName, StockId, STOCKCHINANAME FROM stockLists"
+	sqlString := "SELECT ID, STOCKNAME, STOCKID, STOCKCHINANAME FROM stockLists"
 
 	data := DB.Select(sqlString, &model)
 

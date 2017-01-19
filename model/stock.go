@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Stock struct {
+type StockList struct {
 	ID             int
 	StockName      string
 	StockId        string
