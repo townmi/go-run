@@ -11,12 +11,19 @@ import (
 	_ "io"
 	_ "reflect"
 	"bytes"
-	"fmt"
+	_ "fmt"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type httpStockList struct {
+	scriptName     string
+	scriptFunc     string
+	scriptCon      string
+	scriptConShort string
+	scriptOrg      string
+}
 type stockList struct {
 	VAL  string
 	VAL3 string
@@ -24,14 +31,14 @@ type stockList struct {
 }
 
 type stockDBModel struct {
-	STOCKID string
-	OPENATCASH float64
+	STOCKID        string
+	OPENATCASH     float64
 	MIDCLOSEATCASH float64
-	MIDOPENATCASH float64
-	CLOSEATCASH float64
-	TRADECOUNT float64
-	STOCKCATEGORY string
-	DATE string
+	MIDOPENATCASH  float64
+	CLOSEATCASH    float64
+	TRADECOUNT     float64
+	STOCKCATEGORY  string
+	DATE           string
 }
 
 type stockListDBModel struct {
@@ -44,53 +51,7 @@ var stock [][]string
 
 var stockLists []stockList
 
-func init() {
-
-	//var list [2]stockList
-	//var list2 [2]stockList
-	//
-	//hash := make(map[string]int)
-	//
-	//list[0] = stockList{VAL:"600000", VAL3:"pfyx", VAL2:"浦发银行"}
-	//list[1] = stockList{VAL:"600018", VAL3:"sgjt", VAL2:"上港集团"}
-	//
-	//list2[0] = stockList{VAL:"600019", VAL3:"bggf", VAL2:"宝钢股份"}
-	//list2[1] = stockList{VAL:"600000", VAL3:"pfyx", VAL2:"浦发银行"}
-	//
-	//for _, v := range list {
-	//
-	//	h := sha1.New()
-	//
-	//	s := v.VAL + v.VAL2
-	//
-	//	io.WriteString(h, s)
-	//
-	//	bs := h.Sum(nil)
-	//	str := ByteToHex(bs)
-	//
-	//	hash[str] = 1
-	//
-	//}
-	//
-	//for _, v := range list2 {
-	//
-	//	h := sha1.New()
-	//
-	//	s := v.VAL + v.VAL2
-	//
-	//	io.WriteString(h, s)
-	//
-	//	bs := h.Sum(nil)
-	//	str := ByteToHex(bs)
-	//
-	//	fmt.Println(hash[str])
-	//
-	//}
-	//
-	//fmt.Println(hash)
-}
-
-func GetStockList(w http.ResponseWriter, r *http.Request)  {
+func GetStockList(w http.ResponseWriter, r *http.Request) {
 	config.SetCORS(w)
 
 	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockLists"
@@ -101,7 +62,7 @@ func GetStockList(w http.ResponseWriter, r *http.Request)  {
 	w.Write([]byte(string(send)))
 }
 
-func GetStock(w http.ResponseWriter, r *http.Request)  {
+func GetStock(w http.ResponseWriter, r *http.Request) {
 
 	config.SetCORS(w)
 
@@ -113,10 +74,103 @@ func GetStock(w http.ResponseWriter, r *http.Request)  {
 	w.Write([]byte(string(send)))
 }
 
-
-
 func ReFreshStockList(w http.ResponseWriter, r *http.Request) {
 
+	config.SetCORS(w)
+
+	lists := make([]httpStockList, 0)
+
+	lists = append(lists, httpStockList{scriptName:"ssesuggestdata", scriptFunc:"get_data", scriptCon:"股票", scriptConShort:"Stock", scriptOrg:"sh"})
+	lists = append(lists, httpStockList{scriptName:"ssesuggestfunddata", scriptFunc:"get_funddata", scriptCon:"基金", scriptConShort:"Fund", scriptOrg:"sh"})
+	lists = append(lists, httpStockList{scriptName:"ssesuggestEbonddata", scriptFunc:"get_ebonddata", scriptCon:"可转换债券", scriptConShort:"Ebond", scriptOrg:"sh"})
+	lists = append(lists, httpStockList{scriptName:"ssesuggestTbonddata", scriptFunc:"get_tbonddata", scriptCon:"国债/贴债", scriptConShort:"Tbond", scriptOrg:"sh"})
+
+	result := runBackEndGetStockList(lists)
+
+	send, _ := json.Marshal(result)
+
+	w.Write([]byte(string(send)))
+
+}
+
+func ReFreshStock(w http.ResponseWriter, r *http.Request) {
+
+	config.SetCORS(w)
+	//insertSlice := make([]interface{}, 0)
+	year := [...]string{"2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"}
+	type model struct {
+		StockId       string
+		StockConShort string
+		StockOrg      string
+	}
+
+	sqlString := "SELECT STOCKID, STOCKCONSHORT, STOCKORG FROM stockLists WHERE StockConShort = Stock"
+	data := DB.Select(sqlString, &model{})
+
+	b := bytes.Buffer{}
+	b.WriteString("INSERT INTO stockCollections(DATE, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, STOCKCATEGORY, STOCKID) values (?,?,?,?,?,?,?,?)")
+
+	/**
+	 * 事物
+	 */
+	db, err := sql.Open(config.Env.SQL.NAME, DB.DbLink)
+	config.CheckError(err, "open db fail\n")
+	defer db.Close()
+
+	tx, err := db.Begin()
+	config.CheckError(err, "Begin db fail\n")
+
+	stmtInsert, err := tx.Prepare(b.String())
+	config.CheckError(err, "Begin db fail\n")
+
+	for _, y := range year {
+		for _, v := range data {
+
+			sv := v.(model)
+			st := "http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?_var=kline_dayqfq&param=sh" + sv.StockId + ",day," + y + "-01-01," + y + "-12-31,320,qfq&r="
+
+			resp, err := http.Get(st)
+			config.CheckError(err, "http get stocks fail\n")
+
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			config.CheckError(err, "ioutil read data fail\n")
+
+			vm := otto.New()
+			vm.Run(string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);")
+
+			value, err := vm.Get("yearData")
+			config.CheckError(err, "vm get javascript data fail\n")
+
+			v, _ := value.ToString()
+			if v != "undefined" {
+				errJson := json.Unmarshal([]byte(v), &stock)
+				config.CheckError(errJson, "")
+				for _, vj := range stock {
+					if len(vj) == 6 {
+						_, err = stmtInsert.Exec(vj[0], vj[1], vj[2], vj[3], vj[4], vj[5], "sh", sv.StockId)
+						config.CheckError(err, "Exec db fail\n")
+					}
+
+				}
+
+			}
+
+		}
+	}
+
+	stmtInsert.Close()
+
+	err = tx.Commit()
+
+	//send, _ := json.Marshal(rowCnt)
+
+	//w.Write([]byte(string(send)))
+
+	w.Write([]byte("ok"))
+}
+
+func CheckStockList(w http.ResponseWriter, r *http.Request) {
 	config.SetCORS(w)
 
 	resp, err := http.Get("http://www.sse.com.cn/js/common/ssesuggestdataAll.js")
@@ -160,155 +214,57 @@ func ReFreshStockList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(hashResult) == 0 {
-		w.Write([]byte(`{action: "nodiff"}`))
-	} else {
-		b := bytes.Buffer{}
-		b.WriteString("INSERT INTO stockLists(STOCKID, STOCKNAME, STOCKCHINANAME) values")
+	send, _ := json.Marshal(hashResult)
 
-		insertSlice := make([]interface{}, 0)
-		for i, v := range hashResult {
-			insertSlice = append(insertSlice, v.VAL, v.VAL3, v.VAL2)
-			if i == len(hashResult) - 1 {
-				b.WriteString("(?,?,?)")
-			} else {
-				b.WriteString("(?,?,?), ")
-			}
-		}
+	w.Write([]byte(string(send)))
 
-		rowCnt := DB.Insert(b.String(), insertSlice...)
-
-		fmt.Println(insertSlice[0])
-
-		send, _ := json.Marshal(rowCnt)
-
-		w.Write([]byte(string(send)))
-	}
 }
 
+func runBackEndGetStockList(scripts []httpStockList) interface{} {
 
+	result := make([]interface{}, 0)
+	for _, v := range scripts {
 
-func ReFreshStock(w http.ResponseWriter, r *http.Request) {
+		resp, err := http.Get("http://www.sse.com.cn/js/common/" + v.scriptName + ".js")
+		config.CheckError(err, "http get stocks fail")
 
-	config.SetCORS(w)
-	//insertSlice := make([]interface{}, 0)
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		config.CheckError(err, "ioutil read data fail")
 
-	type model struct {
-		StockId string
-	}
+		vm := otto.New()
+		vm.Run(string(body) + "\n;var stockList = JSON.stringify(" + v.scriptFunc + "());")
 
-	sqlString := "SELECT STOCKID FROM stockLists"
-	data := DB.Select(sqlString, &model{})
+		value, err := vm.Get("stockList")
+		config.CheckError(err, "vm get javascript data fail")
 
-	b := bytes.Buffer{}
-	b.WriteString("INSERT INTO stockCollections(DATE, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, STOCKCATEGORY, STOCKID) values (?,?,?,?,?,?,?,?)")
+		val, _ := value.ToString()
+		errJson := json.Unmarshal([]byte(val), &stockLists)
+		config.CheckError(errJson, "Json Unmarshal fail")
 
+		if len(stockLists) == 0 {
+			result = append(result, nil)
+		} else {
 
+			b := bytes.Buffer{}
+			b.WriteString("INSERT ignore INTO stockLists(STOCKID, STOCKCHINANAME, STOCKNAME, STOCKUNIQUE, STOCKCON, STOCKCONSHORT, STOCKORG) values")
 
-	/**
-	 * 事物
-	 */
-
-	db, err := sql.Open(config.Env.SQL.NAME, DB.DbLink)
-	config.CheckError(err, "open db fail\n")
-	defer db.Close()
-
-	tx, err := db.Begin()
-	config.CheckError(err, "Begin db fail\n")
-
-	stmtInsert, err := tx.Prepare(b.String())
-	config.CheckError(err, "Begin db fail\n")
-
-
-	for _, v := range data {
-
-		//if i < 3 {
-			sv := v.(model)
-			st := "http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?_var=kline_dayqfq&param=sh" + sv.StockId + ",day,2017-01-01,2017-12-31,320,qfq&r="
-
-			resp, err := http.Get(st)
-			config.CheckError(err, "http get stocks fail\n")
-
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			config.CheckError(err, "ioutil read data fail\n")
-
-			vm := otto.New()
-			vm.Run(string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);")
-
-			value, err := vm.Get("yearData")
-			config.CheckError(err, "vm get javascript data fail\n")
-
-			v, _ := value.ToString()
-			if v != "undefined" {
-				errJson := json.Unmarshal([]byte(v), &stock)
-				config.CheckError(errJson, "")
-
-				for _, vj := range stock {
-					if len(vj) == 6 {
-
-						_, err = stmtInsert.Exec(vj[0], vj[1], vj[2], vj[3], vj[4], vj[5], "sh", sv.StockId)
-						config.CheckError(err, "Exec db fail\n")
-
-						//insertSlice = append(insertSlice, []interface{}{})
-						//b.WriteString("(?,?,?,?,?,?,?,?), ")
-					}
-
+			insertSlice := make([]interface{}, 0)
+			for i, vs := range stockLists {
+				unique := v.scriptOrg + v.scriptConShort + vs.VAL
+				insertSlice = append(insertSlice, vs.VAL, vs.VAL2, vs.VAL3, unique, v.scriptCon, v.scriptConShort, v.scriptOrg)
+				if i == len(stockLists) - 1 {
+					b.WriteString("(?,?,?,?,?,?,?)")
+				} else {
+					b.WriteString("(?,?,?,?,?,?,?), ")
 				}
-
 			}
 
-		//}
-		//if i == len(data) - 1 {
-		//	b.WriteString("(?,?,?,?,?,?,?,?)")
-		//} else {
-		//	b.WriteString("(?,?,?,?,?,?,?,?), ")
-		//}
+			rowCnt := DB.Insert(b.String(), insertSlice...)
+
+			result = append(result, rowCnt)
+		}
 
 	}
-	//
-	//for _, v := range insertSlice {
-	//
-	//}
-
-	//sb := b.String()
-	//
-	//sb = sb[0:len(sb) - 2]
-	//
-	//if len(requsetList) == 0 {
-	//	w.Write([]byte(`{action: "nodiff"}`))
-	//} else {
-	//	b := bytes.Buffer{}
-	//	b.WriteString("INSERT INTO stockLists(STOCKID, STOCKNAME, STOCKCHINANAME) values")
-	//
-	//	insertSlice := make([]interface{}, 0)
-	//	for i, v := range hashResult {
-	//		insertSlice = append(insertSlice, v.VAL, v.VAL3, v.VAL2)
-	//		if i == len(hashResult) - 1 {
-	//			b.WriteString("(?,?,?)")
-	//		} else {
-	//			b.WriteString("(?,?,?), ")
-	//		}
-	//	}
-	//
-	//	rowCnt := DB.Insert(b.String(), insertSlice...)
-	//
-	//	send, _ := json.Marshal(rowCnt)
-	//
-	//	w.Write([]byte(string(send)))
-	//}
-	//fmt.Println(insertSlice[0])
-	//rowCnt := DB.Insert(b.String(), insertSlice...)
-
-	//rowCnt := DB.InsertDataDBTx(b.String(), insertSlice)
-
-	stmtInsert.Close()
-
-	err = tx.Commit()
-
-	//send, _ := json.Marshal(rowCnt)
-
-	//w.Write([]byte(string(send)))
-
-	w.Write([]byte("ok"))
+	return result
 }

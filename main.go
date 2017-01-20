@@ -17,10 +17,14 @@ func main() {
 
 	// GET ROUTES MAP
 	r.HandleFunc("/", route.GetHome).Methods("GET")
+
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
+
 	r.HandleFunc("/email", route.SendEmail).Methods("GET")
-	r.HandleFunc("/stocklist", route.GetStockList).Methods("GET")
+
 	r.HandleFunc("/stock", route.GetStock).Methods("GET")
+	r.HandleFunc("/stocklist", route.GetStockList).Methods("GET")
+	r.HandleFunc("/stocklistcheck", route.CheckStockList).Methods("GET")
 
 	// POST ROUTES MAP
 	r.HandleFunc("/search", route.PostSearch).Methods("POST")
