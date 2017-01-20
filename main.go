@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http"
-	config "go-run/config"
+	"go-run/config"
 	"log"
 	"go-run/route"
 	"github.com/gorilla/mux"
@@ -19,10 +19,14 @@ func main() {
 	r.HandleFunc("/", route.GetHome).Methods("GET")
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
 	r.HandleFunc("/email", route.SendEmail).Methods("GET")
+	r.HandleFunc("/stocklist", route.GetStockList).Methods("GET")
 	r.HandleFunc("/stock", route.GetStock).Methods("GET")
 
 	// POST ROUTES MAP
 	r.HandleFunc("/search", route.PostSearch).Methods("POST")
+
+	r.HandleFunc("/stocklist", route.ReFreshStockList).Methods("POST")
+	r.HandleFunc("/stock", route.ReFreshStock).Methods("POST")
 
 	// BIND PORT TO SERVER
 	log.Fatal(http.ListenAndServe(":"+config.Env.PORT, handlers.CompressHandler(r)))
