@@ -24,7 +24,7 @@ func main() {
 
 	r.HandleFunc("/stock", route.GetStock).Methods("GET")
 	r.HandleFunc("/stocklist", route.GetStockList).Methods("GET")
-	r.HandleFunc("/stocklistcheck", route.CheckStockList).Methods("GET")
+	r.HandleFunc("/stocklistcheck", route.ReFreshStock).Methods("GET")
 
 	// POST ROUTES MAP
 	r.HandleFunc("/search", route.PostSearch).Methods("POST")

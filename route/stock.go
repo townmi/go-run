@@ -15,6 +15,7 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"
+	"fmt"
 )
 
 type httpStockList struct {
@@ -96,19 +97,33 @@ func ReFreshStockList(w http.ResponseWriter, r *http.Request) {
 func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 
 	config.SetCORS(w)
-	//insertSlice := make([]interface{}, 0)
+
+	//r.ParseForm()
+	//
+	////decoder := json.NewDecoder(r.Body)
+	////err := decoder.Decode(&t)
+	////config.CheckError(err, "Json decode r body fail")
+	//
+	//t := r.Form.Get("s")
+	//
+	//fmt.Println(r.Form)
+	//
+	//w.Write([]byte(t))
+	//
+	//return
+
+	count := 0
 	year := [...]string{"2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"}
 	type model struct {
-		StockId       string
-		StockConShort string
-		StockOrg      string
+		StockId     string
+		StockUnique string
 	}
 
-	sqlString := "SELECT STOCKID, STOCKCONSHORT, STOCKORG FROM stockLists WHERE StockConShort = Stock"
+	sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock'"
 	data := DB.Select(sqlString, &model{})
 
 	b := bytes.Buffer{}
-	b.WriteString("INSERT INTO stockCollections(DATE, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, STOCKCATEGORY, STOCKID) values (?,?,?,?,?,?,?,?)")
+	b.WriteString("INSERT INTO stockCollections(STOCKID, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, DATE, STOCKUNIQUE, STOCKCOLLECTIONUNIQUE) values (?,?,?,?,?,?,?,?,?)")
 
 	/**
 	 * 事物
@@ -137,19 +152,31 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 			config.CheckError(err, "ioutil read data fail\n")
 
 			vm := otto.New()
-			vm.Run(string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);")
+			var runScript string
+			//if sv.StockId == "000001" {
+			//	runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);"
+			//} else {
+				runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".day);"
+			//}
+			vm.Run(runScript)
 
 			value, err := vm.Get("yearData")
 			config.CheckError(err, "vm get javascript data fail\n")
 
 			v, _ := value.ToString()
+
 			if v != "undefined" {
 				errJson := json.Unmarshal([]byte(v), &stock)
 				config.CheckError(errJson, "")
 				for _, vj := range stock {
 					if len(vj) == 6 {
-						_, err = stmtInsert.Exec(vj[0], vj[1], vj[2], vj[3], vj[4], vj[5], "sh", sv.StockId)
-						config.CheckError(err, "Exec db fail\n")
+						scu := sv.StockUnique + vj[0]
+						_, err = stmtInsert.Exec(sv.StockId, vj[1], vj[2], vj[3], vj[4], vj[5], vj[0], sv.StockUnique, scu)
+						if err == nil {
+							count ++
+						} else {
+							fmt.Println(err)
+						}
 					}
 
 				}
@@ -163,11 +190,16 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 
 	err = tx.Commit()
 
-	//send, _ := json.Marshal(rowCnt)
+	result := struct {
+		status        string
+		count      string
+	}{"success", string(count)}
 
-	//w.Write([]byte(string(send)))
+	send, _ := json.Marshal(result)
 
-	w.Write([]byte("ok"))
+	w.Write([]byte(string(send)))
+
+	//w.Write([]byte("ok"))
 }
 
 func CheckStockList(w http.ResponseWriter, r *http.Request) {
