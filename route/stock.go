@@ -9,9 +9,8 @@ import (
 	"github.com/robertkrimen/otto"
 	_ "crypto/sha1"
 	_ "io"
-	_ "reflect"
+	"time"
 	"bytes"
-	_ "fmt"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"
@@ -32,14 +31,13 @@ type stockList struct {
 }
 
 type stockDBModel struct {
-	STOCKID        string
-	OPENATCASH     float64
-	MIDCLOSEATCASH float64
-	MIDOPENATCASH  float64
-	CLOSEATCASH    float64
-	TRADECOUNT     float64
-	STOCKCATEGORY  string
-	DATE           string
+	StockId        string
+	OpenAtCash     float64
+	MidCloseAtCash float64
+	MidOpenAtCash  float64
+	CloseAtCash    float64
+	TradeCount     float64
+	Date           string
 }
 
 type stockListDBModel struct {
@@ -48,11 +46,36 @@ type stockListDBModel struct {
 	StockChinaName string
 }
 
+type stockInfo struct {
+	stockId       string
+	stockConShort string
+	stockOrg      string
+	startDate     string
+	endDate       string
+}
+
+func (R *stockInfo) reSetStockId(v string) {
+	R.stockId = v
+}
+func (R *stockInfo) reSetStockConShort(v string) {
+	R.stockConShort = v
+}
+func (R *stockInfo) reSetStockOrg(v string) {
+	R.stockOrg = v
+}
+func (R *stockInfo) reSetStartDate(v string) {
+	R.startDate = v
+}
+func (R *stockInfo) reSetEndDate(v string) {
+	R.endDate = v
+}
+
 var stock [][]string
 
 var stockLists []stockList
 
 func GetStockList(w http.ResponseWriter, r *http.Request) {
+
 	config.SetCORS(w)
 
 	sqlString := "SELECT STOCKID, STOCKNAME, STOCKCHINANAME FROM stockLists"
@@ -67,8 +90,48 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 
 	config.SetCORS(w)
 
-	sqlString := "SELECT STOCKID, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, STOCKCATEGORY, DATE FROM stockCollections WHERE "
+	selectObj := stockInfo{
+		stockId: "000001",
+		stockConShort: "Stock",
+		stockOrg: "sh",
+		startDate: "2016-01-01",
+		endDate: "2017-12-31",
+	}
+
+	r.ParseForm()
+
+	stockId := r.Form.Get("stockId")
+	if stockId != "" {
+		selectObj.reSetStockId(stockId)
+	}
+	stockConShort := r.Form.Get("stockConShort")
+	if stockConShort != "" {
+		selectObj.reSetStockConShort(stockConShort)
+	}
+	stockOrg := r.Form.Get("stockOrg")
+	if stockOrg != "" {
+		selectObj.reSetStockOrg(stockOrg)
+	}
+	startDate := r.Form.Get("startDate")
+	if startDate != "" {
+		selectObj.reSetStartDate(startDate)
+	}
+	endDate := r.Form.Get("endDate")
+	if endDate != "" {
+		selectObj.reSetEndDate(endDate)
+	}
+
+	t := time.Now()
+	fmt.Println(string(t.UnixNano())+"\n")
+
+	sqlString := "SELECT STOCKID, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '" + selectObj.stockId + "' AND sl.STOCKORG = '" + selectObj.stockOrg + "' AND sl.STOCKCONSHORT = '" + selectObj.stockConShort + "') AND s.DATE BETWEEN '" + selectObj.startDate + "' AND '" + selectObj.endDate + "'"
+
 	data := DB.Select(sqlString, &stockDBModel{})
+
+	t2 := time.Now()
+	fmt.Println(string(t2.UnixNano())+"\n")
+
+	fmt.Println((t2.UnixNano() - t.UnixNano())/1000000)
 
 	send, _ := json.Marshal(data)
 
@@ -114,12 +177,13 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 
 	count := 0
 	year := [...]string{"2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"}
+
 	type model struct {
 		StockId     string
 		StockUnique string
 	}
 
-	sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock'"
+	sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock' AND `stockLists`.STOCKID = '000001'"
 	data := DB.Select(sqlString, &model{})
 
 	b := bytes.Buffer{}
@@ -156,7 +220,7 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 			//if sv.StockId == "000001" {
 			//	runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);"
 			//} else {
-				runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".day);"
+			runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".day);"
 			//}
 			vm.Run(runScript)
 
@@ -191,8 +255,8 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 	err = tx.Commit()
 
 	result := struct {
-		status        string
-		count      string
+		status string
+		count  string
 	}{"success", string(count)}
 
 	send, _ := json.Marshal(result)
