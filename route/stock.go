@@ -31,13 +31,13 @@ type stockList struct {
 }
 
 type stockDBModel struct {
-	StockId        string
-	OpenAtCash     float64
-	MidCloseAtCash float64
-	MidOpenAtCash  float64
-	CloseAtCash    float64
-	TradeCount     float64
-	Date           string
+	StockId     string
+	OpenAtCash  float64
+	CloseAtCash float64
+	MaxAtCash   float64
+	MinAtCash   float64
+	TradeCount  float64
+	Date        string
 }
 
 type stockListDBModel struct {
@@ -122,16 +122,16 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := time.Now()
-	fmt.Println(string(t.UnixNano())+"\n")
+	fmt.Println(string(t.UnixNano()) + "\n")
 
-	sqlString := "SELECT STOCKID, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '" + selectObj.stockId + "' AND sl.STOCKORG = '" + selectObj.stockOrg + "' AND sl.STOCKCONSHORT = '" + selectObj.stockConShort + "') AND s.DATE BETWEEN '" + selectObj.startDate + "' AND '" + selectObj.endDate + "'"
+	sqlString := "SELECT STOCKID, OPENATCASH, CLOSEATCASH, MAXATCASH, MINATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '" + selectObj.stockId + "' AND sl.STOCKORG = '" + selectObj.stockOrg + "' AND sl.STOCKCONSHORT = '" + selectObj.stockConShort + "') AND s.DATE BETWEEN '" + selectObj.startDate + "' AND '" + selectObj.endDate + "'"
 
 	data := DB.Select(sqlString, &stockDBModel{})
 
 	t2 := time.Now()
-	fmt.Println(string(t2.UnixNano())+"\n")
+	fmt.Println(string(t2.UnixNano()) + "\n")
 
-	fmt.Println((t2.UnixNano() - t.UnixNano())/1000000)
+	fmt.Println((t2.UnixNano() - t.UnixNano()) / 1000000)
 
 	send, _ := json.Marshal(data)
 
@@ -176,18 +176,18 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 	//return
 
 	count := 0
-	year := [...]string{"2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"}
+	year := [...]string{"1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"}
 
 	type model struct {
 		StockId     string
 		StockUnique string
 	}
 
-	sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock' AND `stockLists`.STOCKID = '000001'"
+	sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock'"
 	data := DB.Select(sqlString, &model{})
 
 	b := bytes.Buffer{}
-	b.WriteString("INSERT INTO stockCollections(STOCKID, OPENATCASH, MIDCLOSEATCASH, MIDOPENATCASH, CLOSEATCASH, TRADECOUNT, DATE, STOCKUNIQUE, STOCKCOLLECTIONUNIQUE) values (?,?,?,?,?,?,?,?,?)")
+	b.WriteString("INSERT INTO stockCollections(STOCKID, OPENATCASH, CLOSEATCASH, MAXATCASH, MINATCASH, TRADECOUNT, DATE, STOCKUNIQUE, STOCKCOLLECTIONUNIQUE) values (?,?,?,?,?,?,?,?,?)")
 
 	/**
 	 * 事物
@@ -217,11 +217,11 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 
 			vm := otto.New()
 			var runScript string
-			//if sv.StockId == "000001" {
-			//	runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);"
-			//} else {
-			runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".day);"
-			//}
+			if sv.StockId == "000001" {
+				runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".day);"
+			} else {
+				runScript = string(body) + "\n;var yearData = JSON.stringify(kline_dayqfq.data.sh" + sv.StockId + ".qfqday);"
+			}
 			vm.Run(runScript)
 
 			value, err := vm.Get("yearData")
