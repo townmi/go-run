@@ -7,16 +7,22 @@ import (
 	"go-run/route"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
+	"fmt"
 )
 
 func main() {
 	// new mux Router
 	r := mux.NewRouter()
 	//
-	//r.Host("www.example.com")
+	r.Host("www.example.com")
 
 	// GET ROUTES MAP
 	r.HandleFunc("/", route.GetHome).Methods("GET")
+
+	//r.Handle("/statics/{rest}", http.StripPrefix("/statics/", http.FileServer(http.Dir(config.Env.PATH + "statics/"))))
+	r.PathPrefix("/statics/").Handler(http.StripPrefix("/statics/", http.FileServer(http.Dir(config.Env.PATH + "statics/"))))
+
+	fmt.Println(config.Env.PATH + "statics/")
 
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
 

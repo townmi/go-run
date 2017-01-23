@@ -18,7 +18,7 @@ type MapRoute interface {
 func GetHome(w http.ResponseWriter, r *http.Request) {
 
 	// get index view template
-	viewPath := config.Env.PATH + "views/index.html"
+	viewPath := config.Env.PATH + "statics/index.html"
 	buff, err := ioutil.ReadFile(viewPath)
 	config.CheckError(err, "read View index fail")
 

@@ -27,28 +27,34 @@
     <meta name="format-detection" content="telephone=no"/>
 </head>
 <body>
-{{range .Items}}
-<div>{{ . }}</div>
-{{else}}
-<div><strong>no rows</strong></div>
-{{end}}
-<form action="/search">
-    <label for="q">search</label>
-    <input type="text" id="q" name="q">
-    <input type="hidden" name="charset" value="utf-8">
-</form>
+<div style="display: none;">
+    {{range .Items}}
+    <div>{{ . }}</div>
+    {{else}}
+    <div><strong>no rows</strong></div>
+    {{end}}
+</div>
 
+<form action="/stock" id="form">
+    <label for="q">search</label>
+    <input type="number" id="q" name="stockId">
+    <input type="hidden" name="stockConShort" value="Stock">
+    <input type="hidden" name="stockOrg" value="sh">
+    <input type="hidden" name="charset" value="utf-8">
+    <input type="text" name="" id="" style="display: none">
+    <input type="submit" value="查找" id="search">
+</form>
 
 <script type="text/javascript">
 
-    document.getElementById("q").onchange = function () {
+    document.getElementById("form").onsubmit = function () {
         var self = this,
             v = self.value,
             xhr = new XMLHttpRequest();
 
         xhr.timeout = 300000;
 
-        xhr.open("POST", "/search", true);
+        xhr.open("GET", "/stock", true);
 
         xhr.responseType = "text";
 
@@ -70,6 +76,8 @@
         };
 
         xhr.send(JSON.stringify({value: v}));
+
+        return false;
     }
 </script>
 </body>

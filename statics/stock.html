@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <link href="//www.google.com/images/branding/product/ico/googleg_lodp.ico" rel="shortcut icon">
+    <link rel="apple-touch-icon-precomposed" href="//st.360buyimg.com/m/images/apple-touch-icon.png?v=jd201612271841">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="author" content="m.www.com">
+
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Pragma" content="no-cache">
+
+    <title>stock</title>
+    <meta name="keywords" content="{{.Keywords}}"/>
+    <meta id="description" name="description" content="{{.Description}}"/>
+
+    <meta content="//www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" itemprop="image">
+
+    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta name="format-detection" content="telephone=no"/>
+
+    <link href="//cdn.bootcss.com/highstock/5.0.7/css/highcharts.css" rel="stylesheet">
+</head>
+<body>
+    <div id="container"></div>
+</body>
+<script type="text/javascript" src="//cdn.bootcss.com/jquery/3.1.1/jquery.js"></script>
+<script type="text/javascript" src="//cdn.bootcss.com/highstock/5.0.7/highstock.src.js"></script>
+<script type="text/javascript" src="stock.js"></script>
+<script type="text/javascript">
+    $(function () {
+
+        // $('#container').highcharts('StockChart', {  
+        //     rangeSelector : {  
+        //         selected : 1  
+        //     },  
+          
+        //     title : {  
+        //         text : 'AAPL Stock Price'  
+        //     },  
+              
+        //     series : [{  
+        //         name : 'AAPL',  
+        //         data : [  
+        //             // 第一位是日期的毫秒数，使用new Date().UTC()可以获得，第二位是数值  
+        //             /* Jul 2006 */  
+        //             [1153440000000,60.72],  
+        //             [1153699200000,61.42],  
+        //             [1153785600000,61.93],  
+        //             [1153872000000,63.87],  
+        //             [1153958400000,63.40],  
+        //             [1154044800000,65.59],  
+        //             [1154304000000,67.96]  
+        //         ],  
+        //         tooltip: {  
+        //             valueDecimals: 2  
+        //         }  
+        //     }]  
+        // }) 
+
+        $.getJSON('https://www.highcharts.com/samples/data/jsonp.php?filename=aapl-c.json&callback=?', function (data) {
+            // Create the chart
+            $('#container').highcharts('StockChart', { 
+                rangeSelector: {
+                    selected: 1
+                },
+
+                title: {
+                    text: 'AAPL Stock Price'
+                },
+
+                series: [{
+                    name: 'AAPL',
+                    data: data,
+                    tooltip: {
+                        valueDecimals: 2
+                    }
+                }]
+            });
+
+        });
+
+    });
+</script>
+</html>

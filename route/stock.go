@@ -126,10 +126,12 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 
 	sqlString := "SELECT STOCKID, OPENATCASH, CLOSEATCASH, MAXATCASH, MINATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '" + selectObj.stockId + "' AND sl.STOCKORG = '" + selectObj.stockOrg + "' AND sl.STOCKCONSHORT = '" + selectObj.stockConShort + "') AND s.DATE BETWEEN '" + selectObj.startDate + "' AND '" + selectObj.endDate + "'"
 
+	//sqlString := "SELECT STOCKID, OPENATCASH, CLOSEATCASH, MAXATCASH, MINATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKID = '"+selectObj.stockId+"'"
+
 	data := DB.Select(sqlString, &stockDBModel{})
 
 	t2 := time.Now()
-	fmt.Println(string(t2.UnixNano()) + "\n")
+	//fmt.Println(string(t2.UnixNano()) + "\n")
 
 	fmt.Println((t2.UnixNano() - t.UnixNano()) / 1000000)
 
