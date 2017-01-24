@@ -9,12 +9,12 @@ import (
 	"github.com/robertkrimen/otto"
 	_ "crypto/sha1"
 	_ "io"
-	"time"
 	"bytes"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"
 	"fmt"
+	"strconv"
 )
 
 type httpStockList struct {
@@ -31,13 +31,8 @@ type stockList struct {
 }
 
 type stockDBModel struct {
-	StockId     string
-	OpenAtCash  float64
 	CloseAtCash float64
-	MaxAtCash   float64
-	MinAtCash   float64
-	TradeCount  float64
-	Date        string
+	Date        int64
 }
 
 type stockListDBModel struct {
@@ -50,8 +45,8 @@ type stockInfo struct {
 	stockId       string
 	stockConShort string
 	stockOrg      string
-	startDate     string
-	endDate       string
+	startDate     int64
+	endDate       int64
 }
 
 func (R *stockInfo) reSetStockId(v string) {
@@ -64,10 +59,10 @@ func (R *stockInfo) reSetStockOrg(v string) {
 	R.stockOrg = v
 }
 func (R *stockInfo) reSetStartDate(v string) {
-	R.startDate = v
+	R.startDate = config.GetUnix(v)
 }
 func (R *stockInfo) reSetEndDate(v string) {
-	R.endDate = v
+	R.endDate = config.GetUnix(v)
 }
 
 var stock [][]string
@@ -94,8 +89,8 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 		stockId: "000001",
 		stockConShort: "Stock",
 		stockOrg: "sh",
-		startDate: "2016-01-01",
-		endDate: "2017-12-31",
+		startDate: config.GetUnix("2016-01-01"),
+		endDate: config.GetUnix("2017-12-31"),
 	}
 
 	r.ParseForm()
@@ -121,19 +116,13 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 		selectObj.reSetEndDate(endDate)
 	}
 
-	t := time.Now()
-	fmt.Println(string(t.UnixNano()) + "\n")
-
-	sqlString := "SELECT STOCKID, OPENATCASH, CLOSEATCASH, MAXATCASH, MINATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '" + selectObj.stockId + "' AND sl.STOCKORG = '" + selectObj.stockOrg + "' AND sl.STOCKCONSHORT = '" + selectObj.stockConShort + "') AND s.DATE BETWEEN '" + selectObj.startDate + "' AND '" + selectObj.endDate + "'"
+	sD := strconv.FormatInt(selectObj.startDate, 10)
+	eD := strconv.FormatInt(selectObj.endDate, 10)
+	sqlString := "SELECT CLOSEATCASH, DATE FROM `stockCollections` s WHERE s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '" + selectObj.stockId + "' AND sl.STOCKORG = '" + selectObj.stockOrg + "' AND sl.STOCKCONSHORT = '" + selectObj.stockConShort + "') AND s.DATE BETWEEN '" + sD + "' AND '" + eD + "'"
 
 	//sqlString := "SELECT STOCKID, OPENATCASH, CLOSEATCASH, MAXATCASH, MINATCASH, TRADECOUNT, DATE FROM `stockCollections` s WHERE s.STOCKID = '"+selectObj.stockId+"'"
 
 	data := DB.Select(sqlString, &stockDBModel{})
-
-	t2 := time.Now()
-	//fmt.Println(string(t2.UnixNano()) + "\n")
-
-	fmt.Println((t2.UnixNano() - t.UnixNano()) / 1000000)
 
 	send, _ := json.Marshal(data)
 
@@ -186,6 +175,7 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock'"
+	//sqlString := "SELECT STOCKID, STOCKUNIQUE FROM `stockLists` WHERE `stockLists`.STOCKCONSHORT = 'Stock' AND `stockLists`.STOCKID = '000001'"
 	data := DB.Select(sqlString, &model{})
 
 	b := bytes.Buffer{}
@@ -236,8 +226,9 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 				config.CheckError(errJson, "")
 				for _, vj := range stock {
 					if len(vj) == 6 {
+						timeUnix := config.GetUnix(vj[0])
 						scu := sv.StockUnique + vj[0]
-						_, err = stmtInsert.Exec(sv.StockId, vj[1], vj[2], vj[3], vj[4], vj[5], vj[0], sv.StockUnique, scu)
+						_, err = stmtInsert.Exec(sv.StockId, vj[1], vj[2], vj[3], vj[4], vj[5], timeUnix, sv.StockUnique, scu)
 						if err == nil {
 							count ++
 						} else {
@@ -264,6 +255,8 @@ func ReFreshStock(w http.ResponseWriter, r *http.Request) {
 	send, _ := json.Marshal(result)
 
 	w.Write([]byte(string(send)))
+
+	return
 
 	//w.Write([]byte("ok"))
 }
@@ -315,6 +308,8 @@ func CheckStockList(w http.ResponseWriter, r *http.Request) {
 	send, _ := json.Marshal(hashResult)
 
 	w.Write([]byte(string(send)))
+
+	return
 
 }
 

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"bytes"
 	"strconv"
+	"time"
 )
 
 type SQL struct {
@@ -41,6 +42,16 @@ func SetCORS(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type\n")
+}
+
+func GetUnix(target string) int64 {
+	//loc, _ := time.LoadLocation("Europe/Berlin")
+	const shortForm = "2006-01-02"
+	//t, _ := time.ParseInLocation(shortForm, "2012-12-12", loc)
+	//fmt.Println(target)
+	t, _ := time.Parse(shortForm, target)
+	//fmt.Println(t)
+	return t.Unix()
 }
 
 func ByteToHex(data []byte) string {
