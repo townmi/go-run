@@ -7,7 +7,6 @@ import (
 	"go-run/route"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
-	"fmt"
 )
 
 func main() {
@@ -15,14 +14,12 @@ func main() {
 	r := mux.NewRouter()
 	//
 	r.Host("www.example.com")
-
-	// GET ROUTES MAP
-	r.HandleFunc("/", route.GetHome).Methods("GET")
-
 	//r.Handle("/statics/{rest}", http.StripPrefix("/statics/", http.FileServer(http.Dir(config.Env.PATH + "statics/"))))
 	r.PathPrefix("/statics/").Handler(http.StripPrefix("/statics/", http.FileServer(http.Dir(config.Env.PATH + "statics/"))))
 
-	fmt.Println(config.Env.PATH + "statics/")
+
+	// GET ROUTES MAP
+	r.HandleFunc("/", route.GetHome).Methods("GET")
 
 	r.HandleFunc("/search", route.GetSearch).Methods("GET")
 
@@ -32,6 +29,8 @@ func main() {
 	r.HandleFunc("/stocklist", route.GetStockList).Methods("GET")
 
 	r.HandleFunc("/stocklistcheck", route.CheckStockList).Methods("GET")
+
+	r.HandleFunc("/house", route.GetHouse).Methods("GET")
 
 	// POST ROUTES MAP
 	r.HandleFunc("/search", route.PostSearch).Methods("POST")

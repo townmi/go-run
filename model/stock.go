@@ -55,5 +55,8 @@ type StockList struct {
 
 //SELECT * FROM `stockCollections` s WHERE s.DATE BETWEEN '2015-01-01' AND '2016-01-01' AND s.STOCKUNIQUE = (SELECT STOCKUNIQUE FROM `stockLists` sl WHERE sl.STOCKID = '600123' AND sl.STOCKORG = 'sh' AND sl.STOCKCONSHORT = 'Stock')
 
+// 5 days  http://web.ifzq.gtimg.cn/appstock/app/day/query?_var=fdays_data_sh000043&code=sh000043&r=0.6637066903920745
+// http://web.ifzq.gtimg.cn/appstock/app/minute/query?_var=min_data_sh000043&code=sh000043&r=0.21536652074876295
+
 
 

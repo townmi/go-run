@@ -361,3 +361,14 @@ func runBackEndGetStockList(scripts []httpStockList) interface{} {
 	}
 	return result
 }
+
+/**
+ ***********************************************************************
+ * current stock data
+ *
+ *
+ */
+
+func ReFreshCurrentStock(w http.ResponseWriter, r *http.Request)  {
+	config.SetCORS(w)
+}
