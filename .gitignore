@@ -36,3 +36,6 @@ env.json
 config/.DS_Store
 
 .env
+
+debug
+.vscode
