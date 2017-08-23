@@ -34,3 +34,5 @@ log_file
 env.json
 .DS_Store
 config/.DS_Store
+
+.env
