@@ -39,3 +39,4 @@ config/.DS_Store
 
 debug
 .vscode
+conf.ini

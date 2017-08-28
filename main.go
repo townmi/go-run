@@ -21,7 +21,8 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!\n")
 	})
-	e.GET("/:id", route.GetUserInfo)
+	e.GET("/user/:id", route.GetUserInfo)
+	e.PUT("/user/:id", route.PutUserInfo)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))
